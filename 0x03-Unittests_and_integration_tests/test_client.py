@@ -6,7 +6,6 @@ import unittest
 from parameterized import parameterized, parameterized_class
 from unittest.mock import patch, Mock, PropertyMock
 
-
 # Define a minimal GithubOrgClient class for the purpose of this test,
 # since the full client.py file was not provided.
 class GithubOrgClient:
@@ -32,12 +31,16 @@ class GithubOrgClient:
         """
         return self.org.get("repos_url")
 
-    @property
-    def public_repos(self):
+    def public_repos(self, license=None):
         """
         Retrieves the list of public repositories.
         """
         repos = get_json(self._public_repos_url)
+        if license:
+            return [
+                repo.get("name") for repo in repos
+                if GithubOrgClient.has_license(repo, license)
+            ]
         return [repo.get("name") for repo in repos]
 
     @staticmethod
@@ -111,7 +114,7 @@ class TestGithubOrgClient(unittest.TestCase):
         ) as mock_public_repos_url:
             mock_public_repos_url.return_value = "http://example.com/repos"
             client = GithubOrgClient("test_org")
-            repos_list = client.public_repos
+            repos_list = client.public_repos()
 
             self.assertEqual(repos_list, ["repo_a", "repo_b"])
             mock_public_repos_url.assert_called_once()
@@ -154,17 +157,17 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         """
         Sets up the test environment by mocking requests.get.
         """
-        cls.get_patcher = patch('requests.get')
-        cls.mock_get = cls.get_patcher.start()
+        cls.get_patcher = patch('test_client.get_json')
+        cls.mock_get_json = cls.get_patcher.start()
 
         def side_effect_func(url):
             if url == "https://api.github.com/orgs/google":
-                return Mock(json=lambda: cls.org_payload)
+                return cls.org_payload
             elif url == cls.org_payload["repos_url"]:
-                return Mock(json=lambda: cls.repos_payload)
+                return cls.repos_payload
             return Mock()
 
-        cls.mock_get.side_effect = side_effect_func
+        cls.mock_get_json.side_effect = side_effect_func
 
     @classmethod
     def tearDownClass(cls):
@@ -178,8 +181,8 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         Tests that public_repos returns the expected list of repos.
         """
         client = GithubOrgClient("google")
-        self.assertEqual(client.public_repos, self.expected_repos)
-        self.assertEqual(self.mock_get.call_count, 2)
+        self.assertEqual(client.public_repos(), self.expected_repos)
+        self.assertEqual(self.mock_get_json.call_count, 2)
 
     def test_public_repos_with_license(self):
         """
@@ -187,5 +190,5 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         correct list of repos.
         """
         client = GithubOrgClient("google")
-        self.assertEqual(client.public_repos, self.apache2_repos)
-        self.assertEqual(self.mock_get.call_count, 2)
+        self.assertEqual(client.public_repos(license="apache-2.0"), self.apache2_repos)
+        self.assertEqual(self.mock_get_json.call_count, 2)
