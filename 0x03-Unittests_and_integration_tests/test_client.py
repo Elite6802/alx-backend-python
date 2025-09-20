@@ -172,3 +172,20 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         Tears down the test environment by stopping the patcher.
         """
         cls.get_patcher.stop()
+
+    def test_public_repos(self):
+        """
+        Tests that public_repos returns the expected list of repos.
+        """
+        client = GithubOrgClient("google")
+        self.assertEqual(client.public_repos, self.expected_repos)
+        self.assertEqual(self.mock_get.call_count, 2)
+
+    def test_public_repos_with_license(self):
+        """
+        Tests that public_repos with a license argument returns the
+        correct list of repos.
+        """
+        client = GithubOrgClient("google")
+        self.assertEqual(client.public_repos, self.apache2_repos)
+        self.assertEqual(self.mock_get.call_count, 2)
