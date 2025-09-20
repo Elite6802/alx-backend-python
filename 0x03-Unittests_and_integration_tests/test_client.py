@@ -6,6 +6,19 @@ import unittest
 from parameterized import parameterized, parameterized_class
 from unittest.mock import patch, Mock, PropertyMock
 
+
+# Fixtures from fixtures.py (simulated for self-containment)
+org_payload = {"repos_url": "https://api.github.com/orgs/google/repos"}
+repos_payload = [
+    {"name": "repo1"},
+    {"name": "repo2"},
+    {"name": "repo_a", "license": {"key": "apache-2.0"}},
+    {"name": "repo_b", "license": {"key": "mit"}},
+]
+expected_repos = ["repo1", "repo2", "repo_a", "repo_b"]
+apache2_repos = ["repo_a"]
+
+
 # Define a minimal GithubOrgClient class for the purpose of this test,
 # since the full client.py file was not provided.
 class GithubOrgClient:
@@ -132,18 +145,6 @@ class TestGithubOrgClient(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
 
-# Fixtures from fixtures.py (simulated for self-containment)
-org_payload = {"repos_url": "https://api.github.com/orgs/google/repos"}
-repos_payload = [
-    {"name": "repo1"},
-    {"name": "repo2"},
-    {"name": "repo_a", "license": {"key": "apache-2.0"}},
-    {"name": "repo_b", "license": {"key": "mit"}},
-]
-expected_repos = ["repo1", "repo2", "repo_a", "repo_b"]
-apache2_repos = ["repo_a"]
-
-
 @parameterized_class([
     {"org_payload": org_payload, "repos_payload": repos_payload,
      "expected_repos": expected_repos, "apache2_repos": apache2_repos}
@@ -183,6 +184,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         client = GithubOrgClient("google")
         self.assertEqual(client.public_repos(), self.expected_repos)
         self.assertEqual(self.mock_get_json.call_count, 2)
+        self.mock_get_json.reset_mock()
 
     def test_public_repos_with_license(self):
         """
@@ -190,5 +192,8 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         correct list of repos.
         """
         client = GithubOrgClient("google")
-        self.assertEqual(client.public_repos(license="apache-2.0"), self.apache2_repos)
+        self.assertEqual(
+            client.public_repos(license="apache-2.0"), self.apache2_repos
+        )
         self.assertEqual(self.mock_get_json.call_count, 2)
+        self.mock_get_json.reset_mock()
