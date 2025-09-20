@@ -6,6 +6,7 @@ import unittest
 from parameterized import parameterized
 from unittest.mock import patch, Mock, PropertyMock
 
+
 # Define a minimal GithubOrgClient class for the purpose of this test,
 # since the full client.py file was not provided.
 class GithubOrgClient:
@@ -107,3 +108,4 @@ class TestGithubOrgClient(unittest.TestCase):
             self.assertEqual(repos_list, ["repo_a", "repo_b"])
             mock_public_repos_url.assert_called_once()
             mock_get_json.assert_called_once()
+
