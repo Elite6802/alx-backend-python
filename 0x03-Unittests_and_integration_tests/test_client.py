@@ -40,6 +40,14 @@ class GithubOrgClient:
         repos = get_json(self._public_repos_url)
         return [repo.get("name") for repo in repos]
 
+    @staticmethod
+    def has_license(repo: dict, license_key: str) -> bool:
+        """
+        Checks if a repository has a specific license.
+        """
+        license = repo.get("license", {})
+        return license.get("key") == license_key
+
 
 # The get_json function is assumed to be imported from utils, as in previous
 # tasks. A mock implementation is not needed here since we will patch it.
@@ -108,3 +116,14 @@ class TestGithubOrgClient(unittest.TestCase):
             self.assertEqual(repos_list, ["repo_a", "repo_b"])
             mock_public_repos_url.assert_called_once()
             mock_get_json.assert_called_once()
+
+    @parameterized.expand([
+        ({"license": {"key": "my_license"}}, "my_license", True),
+        ({"license": {"key": "other_license"}}, "my_license", False),
+    ])
+    def test_has_license(self, repo, license_key, expected_result):
+        """
+        Tests that has_license returns the correct boolean value.
+        """
+        result = GithubOrgClient.has_license(repo, license_key)
+        self.assertEqual(result, expected_result)
