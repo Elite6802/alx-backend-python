@@ -4,7 +4,7 @@ Unit tests for the utils.access_nested_map function.
 """
 import unittest
 from parameterized import parameterized
-from utils import access_nested_map
+from fixtures import access_nested_map
 
 class TestAccessNestedMap(unittest.TestCase):
     """
@@ -21,3 +21,4 @@ class TestAccessNestedMap(unittest.TestCase):
         """
         result = access_nested_map(nested_map, path)
         self.assertEqual(result, expected)
+
