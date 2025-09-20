@@ -4,7 +4,7 @@ Unit tests for the client module.
 """
 import unittest
 from parameterized import parameterized
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, PropertyMock
 
 # Define a minimal GithubOrgClient class for the purpose of this test,
 # since the full client.py file was not provided.
@@ -30,6 +30,14 @@ class GithubOrgClient:
         Retrieves the URL for public repositories.
         """
         return self.org.get("repos_url")
+
+    @property
+    def public_repos(self):
+        """
+        Retrieves the list of public repositories.
+        """
+        repos = get_json(self._public_repos_url)
+        return [repo.get("name") for repo in repos]
 
 
 # The get_json function is assumed to be imported from utils, as in previous
@@ -76,3 +84,26 @@ class TestGithubOrgClient(unittest.TestCase):
             self.assertEqual(
                 client._public_repos_url, payload["repos_url"]
             )
+
+    @patch('test_client.get_json')
+    def test_public_repos(self, mock_get_json):
+        """
+        Tests that public_repos returns the expected list of repos.
+        """
+        repos_payload = [
+            {"name": "repo_a", "license": "mit"},
+            {"name": "repo_b", "license": "apache-2.0"},
+        ]
+        mock_get_json.return_value = repos_payload
+
+        with patch(
+            'test_client.GithubOrgClient._public_repos_url',
+            new_callable=PropertyMock
+        ) as mock_public_repos_url:
+            mock_public_repos_url.return_value = "http://example.com/repos"
+            client = GithubOrgClient("test_org")
+            repos_list = client.public_repos
+
+            self.assertEqual(repos_list, ["repo_a", "repo_b"])
+            mock_public_repos_url.assert_called_once()
+            mock_get_json.assert_called_once()
