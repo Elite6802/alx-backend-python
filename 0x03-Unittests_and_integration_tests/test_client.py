@@ -24,6 +24,13 @@ class GithubOrgClient:
         # This assumes get_json is in the utils module, as per previous tasks.
         return get_json(self._org_url)
 
+    @property
+    def _public_repos_url(self):
+        """
+        Retrieves the URL for public repositories.
+        """
+        return self.org.get("repos_url")
+
 
 # The get_json function is assumed to be imported from utils, as in previous
 # tasks. A mock implementation is not needed here since we will patch it.
@@ -53,3 +60,19 @@ class TestGithubOrgClient(unittest.TestCase):
         mock_get_json.assert_called_once_with(
             f"https://api.github.com/orgs/{org_name}"
         )
+
+    def test_public_repos_url(self):
+        """
+        Test that _public_repos_url returns the correct repos URL
+        based on a mocked payload.
+        """
+        payload = {"repos_url": "http://example.com/repos"}
+        with patch(
+            'test_client.GithubOrgClient.org',
+            new_callable=Mock
+        ) as mock_org:
+            mock_org.get.return_value = payload["repos_url"]
+            client = GithubOrgClient("test_org")
+            self.assertEqual(
+                client._public_repos_url, payload["repos_url"]
+            )
