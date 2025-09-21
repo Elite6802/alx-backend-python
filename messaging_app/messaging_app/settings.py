@@ -132,3 +132,5 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ]
 }
+
+AUTH_USER_MODEL = 'chats.User'
