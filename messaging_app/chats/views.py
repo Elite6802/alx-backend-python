@@ -4,6 +4,9 @@ from django.shortcuts import render
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework import filters
+
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer, UserSerializer
@@ -17,6 +20,16 @@ class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    # Add filter backends to allow searching and filtering
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    filterset_fields = ['participants'] # Allows filtering conversations by participant ID
+
+    def get_queryset(self):
+        """
+        Filters conversations to only show those the current user is a participant of.
+        """
+        return self.request.user.conversations.all().order_by('-created_at')
+
     def perform_create(self, serializer):
         """
         Custom create method to add the current user as a participant.
@@ -25,7 +38,6 @@ class ConversationViewSet(viewsets.ModelViewSet):
         conversation = serializer.save()
         # Add the creating user as a participant.
         conversation.participants.add(self.request.user)
-        # You can add other participants here if the request data includes them.
 
     @action(detail=True, methods=['post'], url_path='send_message')
     def send_message(self, request, pk=None):
@@ -60,6 +72,10 @@ class MessageViewSet(viewsets.ModelViewSet):
     """
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    # Add filter backends
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['conversation', 'sender'] # Allows filtering messages by conversation ID or sender
 
     def get_queryset(self):
         """
