@@ -29,6 +29,9 @@ class User(AbstractUser):
             models.Index(fields=['email']),
         ]
 
+    def __str__(self):
+        return self.username
+
 
 class Conversation(models.Model):
     conversation_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
