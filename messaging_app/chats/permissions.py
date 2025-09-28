@@ -1,32 +1,34 @@
-# messaging_app/chats/permissions.py
-
 from rest_framework import permissions
+# Corrects the import name
+# from .permissions import IsParticipantOrSender
 
-class IsParticipantOfConversation(permissions.BasePermission):
+class IsParticipantOrSender(permissions.BasePermission):
     """
-    Custom permission to only allow participants of a conversation
-    to view, update, and delete messages within it.
+    Custom permission to only allow participants of a Conversation or
+    the sender of a Message to interact with the object.
     """
-
-    def has_permission(self, request, view):
-        # Allow access only if the user is authenticated (global access control)
-        return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
-        # Check if the user is a participant of the conversation.
-        # This logic handles both Conversation and Message objects.
+        # Read permissions are allowed to any participant/sender.
+        if request.method in permissions.SAFE_METHODS:
+            # Check for Conversation object
+            if hasattr(obj, 'participants'):
+                return request.user in obj.participants.all()
 
-        # 1. Determine the Conversation object
-        if hasattr(obj, 'participants'):
-            # If 'obj' is a Conversation instance
-            conversation = obj
-        elif hasattr(obj, 'conversation'):
-            # If 'obj' is a Message instance (assuming Message model has a 'conversation' foreign key)
-            conversation = obj.conversation
-        else:
-            # The object type is unexpected; deny access
+            # Check for Message object
+            if hasattr(obj, 'sender'):
+                return request.user == obj.sender or request.user in obj.conversation.participants.all()
+
             return False
 
-        # 2. Check if the user is in the conversation's 'participants' field
-        # Assuming 'participants' is a ManyToMany field on the Conversation model.
-        return conversation.participants.filter(pk=request.user.pk).exists()
+        # Write permissions (PUT, DELETE) are generally restricted to the owner/sender.
+        # Customize this logic based on your exact business rules (e.g., only sender can delete a message)
+        if hasattr(obj, 'sender'):
+            return request.user == obj.sender
+
+        # For Conversation, only a participant may update/leave it, but often
+        # deletion/modification is handled via specific view logic, not generic perm.
+        if hasattr(obj, 'participants'):
+            return request.user in obj.participants.all()
+
+        return False

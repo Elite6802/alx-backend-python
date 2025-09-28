@@ -127,15 +127,10 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
-    # ... (Keep your JWTAuthentication setup from step 0)
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
-
-    # Set the default permission class to only allow authenticated users
-    # Views that require more specific control (like IsParticipantOfConversation)
-    # will override this default.
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
@@ -170,4 +165,5 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
     "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
+    'TOKEN_OBTAIN_SERIALIZER': 'chats.auth.CustomTokenObtainPairSerializer',
 }
