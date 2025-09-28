@@ -1,0 +1,124 @@
+{
+	"info": {
+		"_postman_id": "edf322e4-fc82-403d-8acf-7cc030abb182",
+		"name": "messaging app api test",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30571922"
+	},
+	"item": [
+		{
+			"name": "Login - JWT",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Login succeeded (200/201)\", function () {\r",
+							"  pm.expect(pm.response.code === 200 || pm.response.code === 201).to.be.true;\r",
+							"});\r",
+							"try {\r",
+							"  var json = pm.response.json();\r",
+							"  var token = json.token || json.access_token || json.data && json.data.token;\r",
+							"  if (token) {\r",
+							"    pm.environment.set(\"jwt_token\", token);\r",
+							"  }\r",
+							"} catch(e) { /* ignore parse errors */ }\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"username\": \"testuser\",\r\n  \"password\": \"testpass\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/api_auth/login",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api_auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create environment",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Create conversation (200/201)\", function () {\r",
+							"  pm.expect(pm.response.code === 200 || pm.response.code === 201).to.be.true;\r",
+							"});\r",
+							"try {\r",
+							"  var j = pm.response.json();\r",
+							"  var id = j.id || j._id || (j.data && j.data.id);\r",
+							"  if (id) pm.environment.set(\"conversation_id\", id);\r",
+							"} catch(e){}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"Test Conversation\",\r\n  \"participants\": [1, 2]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/conversations",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"conversations"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -1,0 +1,66 @@
+2025-09-28 18:51:58.534472 - User: admin - Path: /
+2025-09-28 18:51:58.561149 - User: admin - Path: /api/conversations/
+2025-09-28 18:52:01.717487 - User: admin - Path: /api-auth/logout/
+2025-09-28 18:52:01.757546 - User: Anonymous - Path: /api/conversations/
+Unauthorized: /api/conversations/
+2025-09-28 18:52:06.735518 - User: Anonymous - Path: /api-auth/login/
+2025-09-28 18:52:14.195643 - User: Anonymous - Path: /api-auth/login/
+2025-09-28 18:52:15.368899 - User: admin - Path: /api/conversations/
+2025-09-28 18:52:21.492911 - User: admin - Path: /api/conversations/
+2025-09-28 18:52:24.777895 - User: admin - Path: /api/conversations/
+2025-09-28 18:52:28.099320 - User: admin - Path: /api/conversations/
+Bad Request: /api/conversations/
+2025-09-28 18:52:34.358673 - User: admin - Path: /api-auth/logout/
+2025-09-28 18:52:34.422688 - User: Anonymous - Path: /api/conversations/
+Unauthorized: /api/conversations/
+C:\Users\hp\Desktop\ASSIGNMENTS\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+C:\Users\hp\Desktop\ASSIGNMENTS\alx-backend-python\Django-Middleware-0x03\messaging_app\settings.py changed, reloading.
+2025-09-28 18:54:14.142230 - User: Anonymous - Path: /api/conversations/
+2025-09-28 18:54:14.145399 - User: Anonymous - Path: /api/conversations/
+Unauthorized: /api/conversations/
+2025-09-28 18:54:15.810657 - User: Anonymous - Path: /api-auth/login/
+2025-09-28 18:54:15.811557 - User: Anonymous - Path: /api-auth/login/
+2025-09-28 18:54:18.044721 - User: Anonymous - Path: /api-auth/login/
+2025-09-28 18:54:18.044721 - User: Anonymous - Path: /api-auth/login/
+2025-09-28 18:54:20.289245 - User: admin - Path: /api/conversations/
+2025-09-28 18:54:20.294971 - User: admin - Path: /api/conversations/
+2025-09-28 18:54:36.405410 - User: admin - Path: /api-auth/logout/
+2025-09-28 18:54:36.405410 - User: admin - Path: /api-auth/logout/
+2025-09-28 18:54:36.474025 - User: Anonymous - Path: /api/conversations/
+2025-09-28 18:54:36.475578 - User: Anonymous - Path: /api/conversations/
+Unauthorized: /api/conversations/
+C:\Users\hp\Desktop\ASSIGNMENTS\alx-backend-python\Django-Middleware-0x03\messaging_app\settings.py changed, reloading.
+C:\Users\hp\Desktop\ASSIGNMENTS\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+C:\Users\hp\Desktop\ASSIGNMENTS\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+C:\Users\hp\Desktop\ASSIGNMENTS\alx-backend-python\Django-Middleware-0x03\messaging_app\settings.py changed, reloading.
+C:\Users\hp\Desktop\ASSIGNMENTS\alx-backend-python\Django-Middleware-0x03\messaging_app\settings.py changed, reloading.
+2025-09-28 18:57:11.808090 - User: Anonymous - Path: /api/conversations/
+Unauthorized: /api/conversations/
+2025-09-28 18:57:14.090233 - User: Anonymous - Path: /api/conversations/
+Unauthorized: /api/conversations/
+2025-09-28 18:57:14.837548 - User: Anonymous - Path: /api/conversations/
+Unauthorized: /api/conversations/
+2025-09-28 18:57:15.359669 - User: Anonymous - Path: /api/conversations/
+Unauthorized: /api/conversations/
+2025-09-28 18:57:15.949404 - User: Anonymous - Path: /api/conversations/
+Unauthorized: /api/conversations/
+2025-09-28 18:57:16.400022 - User: Anonymous - Path: /api/conversations/
+Unauthorized: /api/conversations/
+2025-09-28 18:57:24.316051 - User: Anonymous - Path: /api-auth/login/
+2025-09-28 18:57:25.584718 - User: Anonymous - Path: /api-auth/login/
+2025-09-28 18:57:26.915433 - User: admin - Path: /api/conversations/
+2025-09-28 18:57:31.643214 - User: admin - Path: /api/conversations/
+2025-09-28 18:57:34.989134 - User: admin - Path: /api/conversations/
+Bad Request: /api/conversations/
+2025-09-28 18:57:36.470583 - User: admin - Path: /api/conversations/
+Bad Request: /api/conversations/
+2025-09-28 18:57:37.221380 - User: admin - Path: /api/conversations/
+Bad Request: /api/conversations/
+2025-09-28 18:57:37.859278 - User: admin - Path: /api/conversations/
+Bad Request: /api/conversations/
+2025-09-28 18:57:38.554125 - User: admin - Path: /api/conversations/
+Bad Request: /api/conversations/
+2025-09-28 18:57:39.124709 - User: admin - Path: /api/conversations/
+Bad Request: /api/conversations/
+C:\Users\hp\Desktop\ASSIGNMENTS\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+C:\Users\hp\Desktop\ASSIGNMENTS\alx-backend-python\Django-Middleware-0x03\messaging_app\settings.py changed, reloading.
