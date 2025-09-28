@@ -3,49 +3,6 @@ from datetime import datetime
 from django.http import HttpResponseForbidden
 from django.http import JsonResponse
 
-class OffensiveLanguageMiddleware:
-    """
-    Limits chat messages per IP: max 5 messages per minute.
-    """
-
-    def __init__(self, get_response):
-        self.get_response = get_response
-        # Store timestamps per IP in memory (for production use, use Redis)
-        self.ip_timestamps = {}
-
-        # configuration
-        self.time_window = 60  # seconds
-        self.max_messages = 5
-
-    def __call__(self, request):
-        # Only track POST requests to chat endpoints
-        if request.method == "POST" and request.path.startswith("/chats/"):
-            ip = self._get_client_ip(request)
-            now = time.time()
-            timestamps = self.ip_timestamps.get(ip, [])
-
-            # Keep only timestamps within the last minute
-            timestamps = [t for t in timestamps if now - t < self.time_window]
-
-            if len(timestamps) >= self.max_messages:
-                return JsonResponse(
-                    {"detail": f"Rate limit exceeded: max {self.max_messages} messages per minute"},
-                    status=429
-                )
-
-            # record the current message
-            timestamps.append(now)
-            self.ip_timestamps[ip] = timestamps
-
-        response = self.get_response(request)
-        return response
-
-    def _get_client_ip(self, request):
-        xff = request.META.get("HTTP_X_FORWARDED_FOR")
-        if xff:
-            return xff.split(",")[0].strip()
-        return request.META.get("REMOTE_ADDR")
-
 class RolePermissionMiddleware:
     """
     Middleware to restrict access to specific actions based on user roles.
@@ -90,6 +47,49 @@ class RolePermissionMiddleware:
 
         # 5. Return the response
         return response
+
+class OffensiveLanguageMiddleware:
+    """
+    Limits chat messages per IP: max 5 messages per minute.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        # Store timestamps per IP in memory (for production use, use Redis)
+        self.ip_timestamps = {}
+
+        # configuration
+        self.time_window = 60  # seconds
+        self.max_messages = 5
+
+    def __call__(self, request):
+        # Only track POST requests to chat endpoints
+        if request.method == "POST" and request.path.startswith("/chats/"):
+            ip = self._get_client_ip(request)
+            now = time.time()
+            timestamps = self.ip_timestamps.get(ip, [])
+
+            # Keep only timestamps within the last minute
+            timestamps = [t for t in timestamps if now - t < self.time_window]
+
+            if len(timestamps) >= self.max_messages:
+                return JsonResponse(
+                    {"detail": f"Rate limit exceeded: max {self.max_messages} messages per minute"},
+                    status=429
+                )
+
+            # record the current message
+            timestamps.append(now)
+            self.ip_timestamps[ip] = timestamps
+
+        response = self.get_response(request)
+        return response
+
+    def _get_client_ip(self, request):
+        xff = request.META.get("HTTP_X_FORWARDED_FOR")
+        if xff:
+            return xff.split(",")[0].strip()
+        return request.META.get("REMOTE_ADDR")
 
 
 class RequestLoggingMiddleware:
