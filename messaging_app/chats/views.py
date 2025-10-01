@@ -1,15 +1,19 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from rest_framework import viewsets, permissions, status, serializers, generics, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import Conversation, Message
+from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer, UserSerializer
 from .permissions import IsParticipantOrSender
 from .pagination import MessagePagination
 from .filters import MessageFilter
-
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth import logout
+from django.http import HttpRequest, HttpResponse
+from django.views.decorators.cache import cache_page
 
 class ConversationViewSet(viewsets.ModelViewSet):
     """
@@ -94,3 +98,65 @@ class MessageDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     permission_classes = [IsParticipantOrSender]
+
+
+@login_required
+def delete_user_account(request: HttpRequest) -> HttpResponse:
+    """
+    Allows the currently logged-in user to delete their account.
+    """
+    if request.method == 'POST':
+        user = request.user
+        logout(request)
+        user.delete()
+        messages.success(request, "Your account and all associated data have been permanently deleted.")
+        return redirect('home')
+
+    return HttpResponse("Please confirm account deletion via POST request.", status=405)
+
+
+# NEW VIEW: Implement view-level caching for message list
+@cache_page(60)  # Cache this view's response for 60 seconds
+@login_required
+def cached_message_list(request):
+    """
+    Displays a list of messages sent by the current user.
+    This view's output is cached for 60 seconds.
+    """
+
+    # Simulate a time-consuming database query
+    # We use select_related to make this query efficient when it *does* run.
+    messages = Message.objects.filter(
+        sender=request.user
+    ).select_related('receiver').order_by('-timestamp')[:50]
+
+    context = {
+        'messages': messages,
+        'cache_timeout': 60,
+        'user': request.user,
+    }
+
+    # In a real application, you would render a template here.
+    # For demonstration, we return a simple HTML response showing the time
+    # to illustrate caching.
+
+    from datetime import datetime
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><title>Cached Messages</title></head>
+    <body>
+        <h1>Cached Message List (Timeout: 60s)</h1>
+        <p>This content was generated at: <strong>{current_time}</strong>. It will not change until the cache expires.</p>
+        <h2>Your Sent Messages:</h2>
+        <ul>
+            {''.join([f'<li>To {m.receiver.username}: {m.content[:50]}...</li>' for m in messages])}
+        </ul>
+        <p>Next database access will occur in {60} seconds.</p>
+    </body>
+    </html>
+    """
+    return HttpResponse(html_content)
+
