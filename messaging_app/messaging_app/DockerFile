@@ -1,0 +1,32 @@
+# Use the specified official Python base image
+FROM python:3.10
+
+# Set environment variables to prevent Python from buffering its output
+# and to correctly identify the Django settings module.
+ENV PYTHONUNBUFFERED 1
+# Assuming your Django project structure is standard:
+# messaging_app/manage.py
+# messaging_app/messaging_app/settings.py
+ENV DJANGO_SETTINGS_MODULE messaging_app.settings
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy the requirements file into the container
+# This step is isolated to leverage Docker's build cache
+COPY requirements.txt /usr/src/app/
+
+# Install the dependencies listed in requirements.txt
+# --no-cache-dir reduces the final image size
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code into the container
+# This copies everything from the 'messaging_app' directory context
+COPY . /usr/src/app
+
+# Expose the port that the Django application runs on (default 8000)
+EXPOSE 8000
+
+# Command to run the Django application when the container starts
+# We bind the runserver command to 0.0.0.0 so it is accessible from outside the container
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
