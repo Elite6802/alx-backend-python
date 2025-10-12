@@ -5,7 +5,7 @@ FROM python:3.10
 # and to correctly identify the Django settings module.
 ENV PYTHONUNBUFFERED 1
 # Assuming your Django project structure is standard:
-# messaging_app/manage.p
+# messaging_app/manage.py
 # messaging_app/messaging_app/settings.py
 ENV DJANGO_SETTINGS_MODULE messaging_app.settings
 
@@ -20,6 +20,7 @@ COPY requirements.txt /usr/src/app/
 # --no-cache-dir reduces the final image size
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the rest of the application code into the container
 # This copies everything from the 'messaging_app' directory context
 COPY . /usr/src/app
 

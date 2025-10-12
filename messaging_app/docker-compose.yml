@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+
+1. Django Web Application Service
+web:
+
+Build using the existing Dockerfile in the current directory
+build: .
+
+Map host port 8000 to container port 8000
+ports:
+
+"8000:8000"
+
+Ensure the database is ready (or at least starting) before the web app starts
+depends_on:
+
+db
+
+Load environment variables from the .env file for Django settings
+env_file:
+
+.env
+
+Use the runserver command you had in the Dockerfile
+command: python manage.py runserver 0.0.0.0:8000
+
+2. MySQL Database Service
+db:
+
+Use the official MySQL 8.0 image
+image: mysql:8.0
+
+Always restart the database container if it crashes
+restart: always
+
+Load environment variables for configuration (passwords, user, db name)
+env_file:
+
+.env
+
+Define a persistent volume to store data outside the container
+volumes:
+
+mysql_data:/var/lib/mysql
+
+Expose the standard MySQL port (optional, but useful for debugging)
+expose:
+
+3306
+
+Define persistent volume storage (data will survive container destruction)
+volumes:
+mysql_data:
