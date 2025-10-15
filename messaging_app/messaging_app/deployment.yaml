@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: django-messaging-app
+labels:
+app: django-app
+spec:
+
+Define the number of identical copies (replicas) of your app to run
+replicas: 2
+selector:
+matchLabels:
+app: django-app
+template:
+metadata:
+labels:
+app: django-app
+spec:
+containers:
+- name: django-container
+# 🚨 IMPORTANT: Replace this with the actual path to your Docker image
+# (e.g., your-dockerhub-username/django-messaging-app:v1)
+image: your-repo/django-messaging-app:latest
+ports:
+- containerPort: 8000
+# Assuming your Django app runs on port 8000 inside the container.
+# Make sure this matches your Django configuration (e.g., gunicorn/uwsgi port).
+
+apiVersion: v1
+kind: Service
+metadata:
+name: django-messaging-service
+labels:
+app: django-app
+spec:
+
+Use ClusterIP as requested. This exposes the Service on a cluster-internal IP.
+The Service is only reachable from within the cluster.
+type: ClusterIP
+selector:
+app: django-app # Target the pods with the label 'app: django-app'
+ports:
+- protocol: TCP
+port: 80       # The port the service will listen on (accessible internally by other apps)
+targetPort: 8000 # The port the container is listening on (matching containerPort above)
