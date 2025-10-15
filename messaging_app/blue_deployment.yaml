@@ -6,6 +6,13 @@ labels:
 app: django-app
 version: blue # <-- Blue label for the current production version
 spec:
+
+RollingUpdate strategy is the default, ensuring zero downtime
+strategy:
+type: RollingUpdate
+rollingUpdate:
+maxUnavailable: 1 # Allows 1 pod to be unavailable during update
+maxSurge: 1       # Allows 1 extra pod to be created before termination
 replicas: 2
 selector:
 matchLabels:
@@ -19,7 +26,7 @@ version: blue
 spec:
 containers:
 - name: django-container
-# Assume 'v1' is the stable, current version
-image: your-repo/django-messaging-app:v1
+# UPDATED: Image tag changed to 2.0 to trigger rolling update
+image: your-repo/django-messaging-app:2.0
 ports:
 - containerPort: 8000

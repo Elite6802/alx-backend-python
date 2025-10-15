@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# ==============================================================================
+# kubctl-0x03.sh - Rolling Update and Downtime Testing
+# Objective: Apply new blue deployment (v2.0), monitor rollout, and test for
+#            zero downtime using continuous 'curl' requests.
+# ==============================================================================
+
+DEPLOYMENT_NAME="django-blue-deployment"
+SERVICE_NAME="django-messaging-service"
+LOCAL_PORT=8080
+TARGET_PORT=80
+
+echo "=================================================================="
+echo "          Starting Rolling Update: v1 -> v2.0"
+echo "=================================================================="
+
+# --- Prerequisite: Start Port-Forwarding for Downtime Testing ---
+echo "1. ⚙️ Starting port-forward for Service $SERVICE_NAME to localhost:$LOCAL_PORT..."
+
+# Start port-forwarding in the background (Host port 8080 -> Service port 80)
+# This allows us to hit the Service (which points to the 'blue' pods) continuously.
+kubectl port-forward svc/$SERVICE_NAME $LOCAL_PORT:$TARGET_PORT > /dev/null 2>&1 &
+PORT_FORWARD_PID=$!
+sleep 2 # Give port-forward time to establish
+
+echo "Port-forward PID: $PORT_FORWARD_PID. Access URL: http://127.0.0.1:$LOCAL_PORT/api"
+
+
+# --- Downtime Testing Loop ---
+echo -e "\n2. ⏱️ Starting continuous service availability test (curl loop in background)..."
+
+# This loop runs in the background. If a request fails, it records the error.
+FAIL_COUNT=0
+TEST_URL="http://127.0.0.1:$LOCAL_PORT/api" # Use /api path defined in your Ingress/setup
+
+(
+  while true; do
+    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" $TEST_URL)
+    TIMESTAMP=$(date +%H:%M:%S)
+
+    if [ "$RESPONSE" -ne 200 ] && [ "$RESPONSE" -ne 0 ]; then
+      echo -e "[$TIMESTAMP] 🚨 FAILURE! Received HTTP status $RESPONSE"
+      ((FAIL_COUNT++))
+    else
+      echo -e "[$TIMESTAMP] ✅ Success (Status $RESPONSE)"
+    fi
+    sleep 0.5 # Wait half a second between requests
+  done
+) &
+CURL_LOOP_PID=$!
+echo "Continuous curl loop PID: $CURL_LOOP_PID. Monitoring for failures..."
+
+
+# --- Apply and Monitor Rolling Update ---
+echo -e "\n3. ⬆️ Applying updated $DEPLOYMENT_NAME (Image tag :2.0) to trigger rollout..."
+kubectl apply -f blue_deployment.yaml
+
+echo -e "\n4. 🔄 Monitoring rollout status..."
+# Use kubectl rollout status to block until the update is complete
+kubectl rollout status deployment/$DEPLOYMENT_NAME --timeout=120s
+
+if [ $? -ne 0 ]; then
+    echo -e "\n❌ ERROR: Rolling Update failed or timed out!"
+else
+    echo -e "\n✅ Rolling Update successfully completed!"
+fi
+
+
+# --- Cleanup and Verification ---
+echo -e "\n5. 🛑 Stopping background processes and cleaning up..."
+# Stop the continuous curl loop
+kill $CURL_LOOP_PID
+# Stop the port-forwarding
+kill $PORT_FORWARD_PID
+
+# Verify final pod status (should show all new pods)
+echo -e "\n6. 🔎 Final Verification: Pods in $DEPLOYMENT_NAME"
+kubectl get pods -l app=django-app,version=blue
+
+echo -e "\n--- Downtime Summary ---"
+if [ "$FAIL_COUNT" -gt 0 ]; then
+    echo "⚠️ WARNING: Zero-downtime test FAILED! $FAIL_COUNT requests reported an issue."
+else
+    echo "🎉 SUCCESS: Zero-downtime test PASSED! No service disruption detected."
+fi
+
+echo -e "\n=================================================================="
+echo "✨ Script completed."
+echo "=================================================================="
