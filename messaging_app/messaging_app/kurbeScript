@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# ==============================================================================
+# kurbeScript.sh - Local Kubernetes Cluster Setup and Verification
+# Objective: Start minikube, verify the cluster status, and list all pods.
+# ==============================================================================
+
+# --- Function to check for required commands ---
+check_command() {
+    local cmd="$1"
+    if ! command -v "$cmd" &> /dev/null
+    then
+        echo "🚨 ERROR: The command '$cmd' could not be found."
+        echo "Please ensure '$cmd' is installed and available in your PATH."
+        echo "For minikube installation instructions, visit: https://minikube.sigs.k8s.io/docs/start/"
+        exit 1
+    fi
+}
+
+echo "========================================================"
+echo "         Kubernetes Local Cluster Startup Script"
+echo "========================================================"
+
+# 1. Ensure minikube and kubectl are installed
+echo "✅ Checking for prerequisites (minikube and kubectl)..."
+check_command "minikube"
+check_command "kubectl"
+echo "Prerequisites met. Starting process."
+
+# 2. Starts a Kubernetes cluster on your machine
+echo -e "\n🚀 Starting minikube cluster. This may take a few moments..."
+# The '--driver=docker' is often the most reliable default if Docker is installed.
+# You can remove it or change the driver if needed.
+minikube start --driver=docker
+
+# Check if minikube start was successful
+if [ $? -ne 0 ]; then
+    echo "❌ ERROR: minikube failed to start the cluster. Exiting."
+    exit 1
+fi
+
+echo -e "\n========================================================"
+
+# 3. Verifies that the cluster is running using kubectl cluster-info
+echo "🔍 Verifying cluster status (kubectl cluster-info)..."
+# Wait briefly for kubectl to fully connect, though minikube start usually handles this.
+sleep 5
+kubectl cluster-info
+
+echo -e "\n========================================================"
+
+# 4. Retrieves the available pods (including system pods in all namespaces)
+echo "📋 Retrieving all available pods across all namespaces..."
+kubectl get pods --all-namespaces
+
+echo -e "\n========================================================"
+echo "✅ Script finished. Your local Kubernetes cluster is running!"
+echo "To stop the cluster later, run: minikube stop"
+echo "To delete the cluster and its data, run: minikube delete"
+echo "========================================================"
