@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+name: django-ingress
+labels:
+app: django-app
+annotations:
+# This annotation tells the NGINX Ingress controller to rewrite the path,
+# stripping the '/api' prefix before sending traffic to the service.
+# This is often needed if your Django app expects requests to start at '/'
+nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+rules:
+
+http:
+paths:
+
+path: /api
+pathType: Prefix # Matches requests starting with /api
+backend:
+service:
+# Name of the ClusterIP Service created earlier
+name: django-messaging-service
+port:
+# Service port (80)
+number: 80
