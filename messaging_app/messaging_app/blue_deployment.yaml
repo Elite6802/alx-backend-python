@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: django-blue-deployment
+labels:
+app: django-app
+version: blue # <-- Blue label for the current production version
+spec:
+
+RollingUpdate strategy is the default, ensuring zero downtime
+strategy:
+type: RollingUpdate
+rollingUpdate:
+maxUnavailable: 1 # Allows 1 pod to be unavailable during update
+maxSurge: 1       # Allows 1 extra pod to be created before termination
+replicas: 2
+selector:
+matchLabels:
+app: django-app
+version: blue
+template:
+metadata:
+labels:
+app: django-app
+version: blue
+spec:
+containers:
+- name: django-container
+# UPDATED: Image tag changed to 2.0 to trigger rolling update
+image: your-repo/django-messaging-app:2.0
+ports:
+- containerPort: 8000
