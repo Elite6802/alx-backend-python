@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# ==============================================================================
+# kubctl-0x01.sh - Kubernetes Scaling and Monitoring Script
+# Objective: Scale the 'django-messaging-app' Deployment, verify scaling,
+#            perform a brief load test (requires 'wrk'), and monitor resources.
+# ==============================================================================
+
+DEPLOYMENT_NAME="django-messaging-app"
+TARGET_REPLICAS=3
+
+echo "========================================================"
+echo "          Kubernetes Scaling and Monitoring"
+echo "========================================================"
+
+# --- Prerequisites Check ---
+if ! command -v wrk &> /dev/null
+then
+    echo "⚠️ WARNING: 'wrk' command not found. Load testing step will be skipped."
+    echo "To install 'wrk', please refer to its documentation (e.g., 'brew install wrk' on macOS)."
+    SKIP_WRK=true
+else
+    SKIP_WRK=false
+fi
+
+if ! kubectl get deployment $DEPLOYMENT_NAME &> /dev/null
+then
+    echo "🚨 ERROR: Deployment '$DEPLOYMENT_NAME' not found. Please ensure 'deployment.yaml' has been applied."
+    exit 1
+fi
+
+# 1. Use kubectl scale to increase the number of replicas
+echo -e "\n1. ⬆️ Scaling Deployment '$DEPLOYMENT_NAME' to $TARGET_REPLICAS replicas..."
+kubectl scale deployment/$DEPLOYMENT_NAME --replicas=$TARGET_REPLICAS
+
+# Wait for the scaling to complete
+echo "Waiting for $TARGET_REPLICAS replicas to be ready..."
+# Wait for the deployment to become available (new pods running)
+kubectl wait --for=condition=Available deployment/$DEPLOYMENT_NAME --timeout=60s
+
+if [ $? -ne 0 ]; then
+    echo "❌ ERROR: Deployment scaling failed or timed out."
+    exit 1
+fi
+
+echo -e "\n2. ✅ Verifying the new number of running pods..."
+# 2. Verify that multiple pods are running
+kubectl get pods -l app=django-app
+
+# 3. Perform load testing on your app using wrk
+if [ "$SKIP_WRK" = false ]; then
+    echo -e "\n3. ⏱️ Performing brief load testing using 'wrk' against one pod..."
+    # Find a running pod name
+    POD_NAME=$(kubectl get pods -l app=django-app -o jsonpath='{.items[0].metadata.name}')
+
+    if [ -z "$POD_NAME" ]; then
+        echo "⚠️ WARNING: Could not find a running pod. Skipping load test."
+    else
+        # Start port-forwarding in the background (Host port 8080 -> Pod port 8000)
+        echo "Starting port-forward from host:8080 to pod:$POD_NAME:8000 (in background)..."
+        # The '&' runs the command in the background, > /dev/null 2>&1 suppresses output
+        kubectl port-forward $POD_NAME 8080:8000 > /dev/null 2>&1 &
+        PORT_FORWARD_PID=$!
+        sleep 3 # Give port-forward time to establish
+
+        # Run the load test: 4 threads, 50 connections, for 5 seconds
+        echo "Running 'wrk -t 4 -c 50 -d 5s http://127.0.0.1:8080'..."
+        wrk -t 4 -c 50 -d 5s http://127.0.0.1:8080
+
+        # Kill the background port-forward process
+        kill $PORT_FORWARD_PID
+        echo "Killed background port-forward process (PID: $PORT_FORWARD_PID)."
+    fi
+fi
+
+# 4. Monitors Resource Usage
+echo -e "\n4. 📊 Monitoring Pod Resource Usage (kubectl top)..."
+echo "Note: This requires the Metrics Server to be running (usually default in minikube)."
+kubectl top pod -l app=django-app --containers
+
+echo -e "\n========================================================"
+echo "✨ Script completed. Deployment is now scaled to $TARGET_REPLICAS replicas."
+echo "========================================================"
