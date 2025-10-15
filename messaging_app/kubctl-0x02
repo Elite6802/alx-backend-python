@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# ==============================================================================
+# kubctl-0x02.sh - Blue/Green Deployment Setup
+# Objective: Deploy blue (v1) and green (v2) versions simultaneously and check logs.
+# ==============================================================================
+
+GREEN_DEPLOYMENT_NAME="django-green-deployment"
+BLUE_DEPLOYMENT_NAME="django-blue-deployment"
+SERVICE_NAME="django-messaging-service"
+
+echo "========================================================"
+echo "          Starting Blue/Green Deployment Setup"
+echo "========================================================"
+
+# 1. Apply the blue deployment (ensuring the old version is running)
+echo -e "\n1. 🔵 Applying Blue Deployment ($BLUE_DEPLOYMENT_NAME - v1)..."
+kubectl apply -f blue_deployment.yaml
+kubectl wait --for=condition=Available deployment/$BLUE_DEPLOYMENT_NAME --timeout=60s
+
+# 2. Apply the green deployment (the new version to be tested)
+echo -e "\n2. 🟢 Applying Green Deployment ($GREEN_DEPLOYMENT_NAME - v2)..."
+kubectl apply -f green_deployment.yaml
+kubectl wait --for=condition=Available deployment/$GREEN_DEPLOYMENT_NAME --timeout=60s
+
+# 3. Apply the Service (initially routing traffic to Blue)
+echo -e "\n3. ⚙️ Applying Service ($SERVICE_NAME) - Traffic currently routes to BLUE."
+kubectl apply -f kubeservice.yaml
+
+# 4. Verify all pods are running
+echo -e "\n4. ✅ Checking all pods (Blue and Green) and Service status:"
+kubectl get deployments,pods,svc -l app=django-app
+
+# 5. Check logs for the new Green version to ensure it started without errors
+echo -e "\n5. 🔎 Checking logs of the new Green Deployment pods for errors..."
+
+# Find the name of the first green pod
+GREEN_POD=$(kubectl get pods -l version=green -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+
+if [ -z "$GREEN_POD" ]; then
+    echo "⚠️ WARNING: Could not find a running green pod to check logs."
+else
+    echo "Retrieving logs for pod: $GREEN_POD"
+    kubectl logs $GREEN_POD
+fi
+
+echo -e "\n========================================================"
+echo "Deployment Complete."
+echo "Current traffic is still served by the BLUE (v1) deployment."
+echo "To switch traffic to GREEN (v2), modify 'kubeservice.yaml' to set 'version: green' and run 'kubectl apply -f kubeservice.yaml'."
+echo "========================================================"

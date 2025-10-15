@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: django-blue-deployment
+labels:
+app: django-app
+version: blue # <-- Blue label for the current production version
+spec:
+replicas: 2
+selector:
+matchLabels:
+app: django-app
+version: blue
+template:
+metadata:
+labels:
+app: django-app
+version: blue
+spec:
+containers:
+- name: django-container
+# Assume 'v1' is the stable, current version
+image: your-repo/django-messaging-app:v1
+ports:
+- containerPort: 8000

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: django-green-deployment
+labels:
+app: django-app
+version: green # <-- Green label for the new version
+spec:
+replicas: 2
+selector:
+matchLabels:
+app: django-app
+version: green
+template:
+metadata:
+labels:
+app: django-app
+version: green
+spec:
+containers:
+- name: django-container
+# Simulate the new version image
+image: your-repo/django-messaging-app:v2
+ports:
+- containerPort: 8000
