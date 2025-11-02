@@ -1,0 +1,62 @@
+name: CI - Django Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install -r messaging_app/requirements.txt
+          pip install pytest pytest-django mysqlclient
+
+      - name: Run Tests
+        env:
+          DB_NAME: test_db
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_HOST: 127.0.0.1
+        run: pytest messaging_app/tests/ --disable-warnings -v
+
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 messaging_app --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run coverage
+        run: |
+          pip install coverage
+          coverage run -m pytest messaging_app/tests/
+          coverage xml
+          coverage report
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
