@@ -11,7 +11,6 @@ pipeline {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/Elite6802/alx-backend-python.git',
-                    credentialsId: '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'
             }
         }
 
